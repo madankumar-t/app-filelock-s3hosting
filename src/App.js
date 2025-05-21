@@ -1,22 +1,31 @@
 import React, { useEffect, useState } from "react";
 import FileTable from "./components/FileTable";
-import { listFiles } from "./services/s3";
-import { getLocks } from "./services/api";
+import { getFiles, getLockStatus, getUsers } from "./services/api";
 
 function App() {
   const [files, setFiles] = useState([]);
   const [locks, setLocks] = useState({});
+  const [users, setUsers] = useState({});
 
   useEffect(() => {
     async function fetchData() {
-      const s3Files = await listFiles();
-      const lockData = await getLocks();
+      const [fileList, lockData, userMap] = await Promise.all([
+        getFiles(),
+        getLockStatus(),
+        getUsers()
+      ]);
+
       const lockMap = {};
       lockData.forEach(lock => {
-        lockMap[lock.fileKey] = lock;
+        lockMap[lock.filename] = {
+          ...lock,
+          locked_by_full_name: userMap?.[lock.locked_by]?.full_name || lock.locked_by
+        };
       });
-      setFiles(s3Files);
+
+      setFiles(fileList);
       setLocks(lockMap);
+      setUsers(userMap);
     }
     fetchData();
   }, []);
@@ -24,7 +33,7 @@ function App() {
   return (
     <div style={{ padding: "2rem" }}>
       <h1>S3 File Lock UI</h1>
-      <FileTable files={files} locks={locks} />
+      <FileTable files={files} locks={locks} username="adminUser" />
     </div>
   );
 }

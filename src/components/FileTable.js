@@ -1,14 +1,14 @@
 import React from "react";
 import { lockFile, unlockFile } from "../services/api";
 
-function FileTable({ files, locks }) {
+function FileTable({ files, locks, username }) {
   const handleLock = async (fileKey) => {
-    await lockFile(fileKey);
+    await lockFile(fileKey, username);
     window.location.reload();
   };
 
   const handleUnlock = async (fileKey) => {
-    await unlockFile(fileKey);
+    await unlockFile(fileKey, username);
     window.location.reload();
   };
 
@@ -29,7 +29,7 @@ function FileTable({ files, locks }) {
             <tr key={file}>
               <td>{file}</td>
               <td>{lock ? "🔒 Locked" : "🔓 Unlocked"}</td>
-              <td>{lock ? lock.lockedBy : "-"}</td>
+              <td>{lock ? lock.locked_by_full_name : "-"}</td>
               <td>
                 {!lock ? (
                   <button onClick={() => handleLock(file)}>Lock</button>
